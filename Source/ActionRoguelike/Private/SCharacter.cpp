@@ -7,6 +7,7 @@
 #include "SInteractionComponent.h"
 #include "Engine/Classes/Components/InputComponent.h"
 #include "Engine/Classes/Components/SkeletalMeshComponent.h"
+#include "Engine/Public/TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
@@ -101,17 +102,28 @@ void ASCharacter::MoveRight(float Value)
 
 void ASCharacter::PrimaryAttack()
 {
+	PlayAnimMontage(AttackAnim);
+	
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.15f);
+}
+
+void ASCharacter::PrimaryAttack_TimeElapsed()
+{
 	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 	
 	FTransform SpawnTM = FTransform(GetControlRotation(), HandLocation);
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Instigator = this;
 	
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
 }
 
 void ASCharacter::PrimaryInteract()
 {
-	InteractionComp->PrimaryInteract();
+	if (InteractionComp)
+	{
+		InteractionComp->PrimaryInteract();
+	}
 }
